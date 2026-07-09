@@ -1,0 +1,618 @@
+basePath: /
+definitions:
+  handlers.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  handlers.SendOTPRequest:
+    properties:
+      phone_number:
+        type: string
+    type: object
+  handlers.UpdateProfileRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  handlers.VerifyOTPRequest:
+    properties:
+      code:
+        type: string
+      device_id:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  models.Address:
+    properties:
+      address_line_1:
+        type: string
+      address_line_2:
+        type: string
+      city:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: integer
+      is_default:
+        type: boolean
+      latitude:
+        type: number
+      locality:
+        type: string
+      longitude:
+        type: number
+      pincode:
+        type: string
+      state:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.Booking:
+    properties:
+      assignedToID:
+        type: string
+      createdAt:
+        type: string
+      customerID:
+        type: string
+      id:
+        description: gorm.Model
+        type: string
+      scheduledTime:
+        type: string
+      status:
+        type: string
+    type: object
+  models.CreateBookingRequest:
+    properties:
+      customer_id:
+        example: cust1
+        type: string
+      provider_id:
+        example: prov1
+        type: string
+      slot_time:
+        example: "2026-05-05T14:30:00Z"
+        type: string
+    type: object
+  models.User:
+    properties:
+      about:
+        type: string
+      addresses:
+        items:
+          $ref: '#/definitions/models.Address'
+        type: array
+      createdAt:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+    type: object
+host: localhost:8000
+info:
+  contact: {}
+  description: This is a sample Fiber server.
+  title: Fiber API
+  version: "1.0"
+paths:
+  /address/:
+    post:
+      consumes:
+      - application/json
+      description: Create a new address for a user. If marked as default, existing
+        default will be unset.
+      parameters:
+      - description: Address payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Address'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Address'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new address
+      tags:
+      - address
+  /address/{id}:
+    delete:
+      description: Delete an address by ID
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete address
+      tags:
+      - address
+    get:
+      description: Fetch a specific address using its ID
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Address'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get address by ID
+      tags:
+      - address
+    put:
+      consumes:
+      - application/json
+      description: Update an existing address. If marked as default, other defaults
+        will be unset.
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated address payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Address'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Address'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update address
+      tags:
+      - address
+  /address/user/{userId}:
+    get:
+      description: Fetch all addresses belonging to a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Address'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all addresses of a user
+      tags:
+      - address
+  /auth/check-verification:
+    post:
+      consumes:
+      - application/json
+      description: Verifies OTP and returns authentication tokens
+      parameters:
+      - description: OTP verification payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.VerifyOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Verify OTP and login
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Revokes a refresh token and logs out the user
+      parameters:
+      - description: Refresh token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logout user
+      tags:
+      - auth
+  /auth/logout-all:
+    post:
+      description: Revokes all refresh tokens for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Logout from all devices
+      tags:
+      - auth
+  /auth/refresh-token:
+    post:
+      consumes:
+      - application/json
+      description: Generates a new access token using refresh token
+      parameters:
+      - description: Refresh token payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Refresh access token
+      tags:
+      - auth
+  /auth/send-verification:
+    post:
+      consumes:
+      - application/json
+      description: Sends a login OTP to the given phone number
+      parameters:
+      - description: Phone number payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.SendOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Send OTP
+      tags:
+      - auth
+  /bookings/:
+    post:
+      consumes:
+      - application/json
+      description: Create a new service booking for a customer
+      parameters:
+      - description: Booking payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Booking'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a booking
+      tags:
+      - bookings
+  /bookings/accept:
+    post:
+      consumes:
+      - application/json
+      description: Accept a booking request
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Accept booking payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Booking'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Booking'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Accept a booking
+      tags:
+      - bookings
+  /profile:
+    get:
+      description: Retrieves authenticated user's profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - profile
+    put:
+      consumes:
+      - application/json
+      description: Updates authenticated user's profile
+      parameters:
+      - description: Profile update payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update profile
+      tags:
+      - profile
+  /users/{phonenumber}:
+    get:
+      consumes:
+      - application/json
+      description: Creates a new user if not exists, otherwise returns existing user
+        based on email or phone
+      parameters:
+      - description: User payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User already exists
+          schema:
+            additionalProperties: true
+            type: object
+        "201":
+          description: New user created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create or fetch user
+      tags:
+      - users
+swagger: "2.0"

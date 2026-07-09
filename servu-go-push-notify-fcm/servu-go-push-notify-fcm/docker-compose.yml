@@ -1,0 +1,49 @@
+version: '3.9'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: servu-rabbitmq
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  api:
+    build: .
+    container_name: servu-api
+    depends_on:
+      - rabbitmq
+    ports:
+      - '8001:8001'
+    environment:
+      SUPABASE_DB_URL: ${SUPABASE_DB_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_VERIFY_SERVICE_SID: ${TWILIO_VERIFY_SERVICE_SID}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      PORT: 8001
+      NOTIFICATION_PORT: 8002
+    volumes:
+      - ./firebase-service-account.json:/app/firebase-service-account.json:ro
+
+  notification-worker:
+    build: .
+    container_name: servu-notification-worker
+    depends_on:
+      - rabbitmq
+      - api
+    environment:
+      SUPABASE_DB_URL: ${SUPABASE_DB_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_VERIFY_SERVICE_SID: ${TWILIO_VERIFY_SERVICE_SID}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      APP_MODE: notification-worker
+      NOTIFICATION_PORT: 8002
+    volumes:
+      - ./firebase-service-account.json:/app/firebase-service-account.json:ro
